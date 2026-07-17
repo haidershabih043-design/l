@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Zombie Survival</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #222;
+        }
+
+        canvas {
+            display: block;
+            margin: auto;
+            background: #333;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Zombie Survival</h1>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const player = {
+            x: 400,
+            y: 300,
+            size: 20,
+            speed: 4
+        };
+
+        let zombies = [];
+        let keys = {};
+        let gameOver = false;
+
+        document.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
+        document.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+
+        function spawnZombie() {
+            const side = Math.floor(Math.random() * 4);
+            let x, y;
+
+            if (side === 0) { x = 0; y = Math.random() * canvas.height; }
+            if (side === 1) { x = canvas.width; y = Math.random() * canvas.height; }
+            if (side === 2) { x = Math.random() * canvas.width; y = 0; }
+            if (side === 3) { x = Math.random() * canvas.width; y = canvas.height; }
+
+            zombies.push({
+                x,
+                y,
+                size: 20,
+                speed: 1.2
+            });
+        }
+
+        setInterval(spawnZombie, 1500);
+
+        function update() {
+            if (gameOver) return;
+
+            if (keys["w"]) player.y -= player.speed;
+            if (keys["s"]) player.y += player.speed;
+            if (keys["a"]) player.x -= player.speed;
+            if (keys["d"]) player.x += player.speed;
+
+            zombies.forEach(zombie => {
+                let dx = player.x - zombie.x;
+                let dy = player.y - zombie.y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+
+                zombie.x += (dx / dist) * zombie.speed;
+                zombie.y += (dy / dist) * zombie.speed;
+
+                if (dist < player.size + zombie.size) {
+                    gameOver = true;
+                }
+            });
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = "blue";
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = "green";
+            zombies.forEach(zombie => {
+                ctx.beginPath();
+                ctx.arc(zombie.x, zombie.y, zombie.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            if (gameOver) {
+                ctx.fillStyle = "red";
+                ctx.font = "50px Arial";
+                ctx.fillText("GAME OVER", 250, 300);
+            }
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
